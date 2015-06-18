@@ -21,13 +21,15 @@ RUN wget http://archive.apache.org/dist/lucene/solr/$SOLR_VERSION/$SOLR.tgz \
   && rm KEYS \
   && groupadd -r $SOLR_USER \
   && useradd -r -d $SOLR_HOME -s /bin/false -g $SOLR_USER $SOLR_USER
-COPY conf/* $SOLR_HOME/conf/
-COPY jetty-logging.xml $SOLR_HOME/etc/jetty-logging.xml
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chown -R $SOLR_USER:$SOLR_USER $SOLR_HOME
+WORKDIR $SOLR_HOME
+COPY conf/* conf/
+COPY jetty-logging.xml etc/jetty-logging.xml
+COPY docker-entrypoint.sh /usr/bin/docker-entrypoint
+RUN chown -R $SOLR_USER:$SOLR_USER $SOLR_HOME \
+  && chown $SOLR_USER:$SOLR_USER /usr/bin/docker-entrypoint \
+  && chmod ug+x /usr/bin/docker-entrypoint
 
 EXPOSE $SOLR_PORT
 USER $SOLR_USER
-WORKDIR $SOLR_HOME
-ENTRYPOINT ["/docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/docker-entrypoint"]
 CMD ["solr", "-Xms512m", "-Xmx512m"]
